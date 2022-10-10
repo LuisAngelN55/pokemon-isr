@@ -1,9 +1,14 @@
-import { MainLayout } from "../../components/layouts"
-import { useRouter } from 'next/router';
 import { GetStaticPaths, GetStaticProps, NextPage } from "next";
-import { Pokemon } from "../../interfaces";
-import { pokeApi } from "../../api";
 import { Button, Card, Container, Grid, Image, Text } from '@nextui-org/react';
+import { useRouter } from 'next/router';
+import confetti from 'canvas-confetti';
+
+import { localFavorites } from "../../utils";
+import { MainLayout } from "../../components/layouts"
+import { pokeApi } from "../../api";
+import { Pokemon } from "../../interfaces";
+import { useState } from "react";
+
 
 interface Props {
   pokemon: Pokemon
@@ -16,9 +21,33 @@ const PokemonPage: NextPage<Props> = ({ pokemon }) => {
   // const router = useRouter();
   // console.log(router.query);
 
+  const [isInFavorites, setIsInFavorites] = useState( localFavorites.existInFavorites( pokemon.id ));
+
+  const onToggleFavorite = () => {
+    localFavorites.toggleFavorite( pokemon.id );
+    setIsInFavorites( !isInFavorites );
+
+    if( isInFavorites ) return;
+
+    confetti({
+      zIndex: 999,
+      particleCount: 100,
+      spread: 160,
+      angle: -100,
+      origin: {
+        x: 1,
+        y: 0,
+      }
+    })
+
+  }
+
+  // console.log para determinar si esta corriendo del lado del server o solo el front
+  // console.log({ existeWindow: typeof window })
+
 
   return (
-    <MainLayout title="Algún Pokémon">
+    <MainLayout title={ pokemon.name }>
       <Grid.Container css={{ marginTop: '5px'}} gap={ 2 } >
         <Grid xs={ 12 } sm={ 4 } >
           <Card isHoverable css={{ padding: '30px' }}>
@@ -40,9 +69,10 @@ const PokemonPage: NextPage<Props> = ({ pokemon }) => {
               
               <Button
                 color="gradient"
-                ghost
+                ghost={ !isInFavorites }
+                onPress={ onToggleFavorite }
               >
-                Guardar en favoritos
+                { isInFavorites? 'En favoritos' : 'Guardar en favoritos'}
               </Button>
             </Card.Header>
 
